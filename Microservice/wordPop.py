@@ -31,7 +31,7 @@ def textGenerator(wordCount):
         text = text + word.strip() + ' '
         
 
-    print(text)
+    #print(text)
     return text
 
 
@@ -49,13 +49,16 @@ def main():
                 if int(lines[0]) == 1: #check txt file communication from UI
                     if lines[1] == "quit":
                         print("closing word service")
-                        file.close()
+                        with open("wordCount.txt","w") as file: #write random text to wordCount.txt
+                            file.write("0\n")
+                            file.write("waiting") 
+                            file.close()
                         run = False #exit loop and end program
                     else:
                         wordCount = lines[1]
-                        print(wordCount)
+                        #print(wordCount)
                         text = textGenerator(wordCount)
-                        print(text)
+                        #print(text)
                         with open("wordCount.txt","w") as file: #write random text to wordCount.txt
                             file.write("0\n")
                             file.write(text) 

@@ -70,7 +70,7 @@ def uiProcess():
             count = input("how many words would you like? \n")
             try:
                 execute(count)
-                print("Returned Text: \n")
+                print("Returned Text: ")
                 print(returnText)  
                 print("\n")
 
