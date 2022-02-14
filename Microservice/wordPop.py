@@ -20,8 +20,9 @@ def textGenerator(wordCount):
     print('generating text with: ', wordCount, ' words')
     text = ''
     listLength = len(dicText)
-    count = 0
-    while count < int(wordCount):
+
+
+    for x in range(int(wordCount)):
         
         number = randint(0,listLength)
         
@@ -29,7 +30,6 @@ def textGenerator(wordCount):
         
         text = text + word.strip() + ' '
         
-        count = count + 1
 
     print(text)
     return text

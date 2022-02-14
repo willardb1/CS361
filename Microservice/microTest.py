@@ -101,7 +101,7 @@ def execute(count):
 
     while attempt == 2:
         try:
-            with open("wordCount.txt") as file: #check prng-service.txt for number and writes it to image-service.txt
+            with open("wordCount.txt") as file: #check wordCount.txt for return
                 lines = file.readlines()
                 
                 file.close()
@@ -110,7 +110,7 @@ def execute(count):
                     returnText = text
                     attempt = 3
 
-                    with open("wordCount.txt",'w') as file:
+                    with open("wordCount.txt",'w') as file: #clears contents of wordCount.txt (prevent slow down)
                         file.write("0\n")
                         file.write('waiting') 
                         file.close()
