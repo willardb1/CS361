@@ -72,7 +72,7 @@ def uiProcess():
                 execute(count)
                 print("Returned Text: ")
                 print(returnText)  
-                print("\n")
+                
 
             except ValueError:
                 print("number not provided")

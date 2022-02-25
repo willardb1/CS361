@@ -12,7 +12,7 @@ from tkinter.filedialog import askopenfile, asksaveasfile
 from tkinter.tix import COLUMN
 from turtle import left, title, width
 import os
-
+import time
 import encryption as enDe
 
 
@@ -79,17 +79,6 @@ def pullText():
     return valid, message
 
 
-
-def serializeText():
-
-    inputData['cypher'] = opt2.get()
-
-    #post data to microservice in json format {cypher: (1 or 2), password:(text), input text: (text)}
-    print(inputData)
-
-    
-
-
 def retrieveText():
     outputText.config(state='normal')
     outputText.delete(1.0, 'end')
@@ -102,7 +91,6 @@ def retrieveText():
     outputText.config(state='disabled')
 
     print('outputing text')
-
 
 
 def downloadText():
@@ -158,7 +146,6 @@ def selectFile():
 
 
 def run():
-    
     valid, messageTxt = pullText()
     a = ''
     for x in messageTxt:
@@ -167,14 +154,77 @@ def run():
     messageTxt = a
 
     if valid:
-        serializeText()
-        testFunc()
+        pushToMS()
         retrieveText()
 
     else:
         print(messageTxt)
         messagebox.showerror(title='Failed Inputs', message = messageTxt)
         
+
+def init_Pipe():
+    try:
+        with open("service-comm.txt","w") as file: #write start to prng-service.txt
+            file.write("0\n")
+            file.write("Waiting")
+            file.close()
+            #print("writing to wordCount")
+
+    except:
+        print("could not open")
+
+
+def pushToMS():
+    inputData['cypher'] = opt2.get()
+    wait = 0
+    outputData['password'] = inputData['password']
+    attempt = 1
+
+    while attempt == 1:
+        try:
+            with open("service-comm.txt","w") as file: #write run to service-comm.txt
+                file.write("1\n")
+                file.write(inputData['text'])
+                file.write(inputData['password'])
+                file.write(inputData['cypher'])
+                file.close()
+                attempt = 2
+                
+        except:
+            print("fail attempt")
+            pass
+
+    time.sleep(0.5) #wait 0.5sec for txt file to be updated
+
+    while attempt == 2:
+        try:
+            with open("service-comm.txt") as file: #check service-comm.txt for return
+                lines = file.readlines()
+                
+                file.close()
+                if int(lines[0]) == 0:
+                    outputData['text'] = lines[1]
+                    attempt = 3
+
+                    with open("service-comm.txt",'w') as file: #clears contents of service-comm.txt (prevent slow down)
+                        file.write("0\n")
+                        file.write('waiting') 
+                        file.close()
+
+                    print(outputData)
+                else:
+                    #print("fail attempt 2")
+                    pass
+            
+        except:
+            pass
+
+        time.sleep(0.25) #wait 0.5sec for txt file to be updated
+        wait = wait + 1
+        if(wait == 50):
+            attempt = 3
+            outputData['text'] = 'Communication with Microservice failed'
+
 
 def testFunc():
     outputData['password'] = inputData['password']
@@ -290,14 +340,23 @@ cypherLabel.grid(row=11,column=5, sticky=W)
 CypherDescription = Label(window, text = 'Select whether you would like to encrypt od decrypt the provided text', justify='left', font= 'none 12')
 CypherDescription.grid(row=12,column=5, sticky=NW)
 
-opt2 = IntVar()
-opt2.set(1)
-cypherOption1 = Radiobutton(window, text = 'Encrypt', justify='left',font= 'none 12 bold', value = 1, variable= opt2)
+#opt2 = IntVar()
+#opt2.set(1)
+
+# cypherOption1 = Radiobutton(window, text = 'Encrypt', justify='left',font= 'none 12 bold', value = 1, variable= opt2)
+# cypherOption1.grid(row=13,column=5, sticky=NW)
+
+# cypherOption2 = Radiobutton(window, text= 'Decrypt',justify='left',font= 'none 12 bold', value = 2, variable=opt2)
+# cypherOption2.grid(row=14,column=5, sticky=NW)
+
+opt2 = StringVar()
+opt2.set('e')
+
+cypherOption1 = Radiobutton(window, text = 'Encrypt', justify='left',font= 'none 12 bold', value = 'e', variable= opt2)
 cypherOption1.grid(row=13,column=5, sticky=NW)
 
-cypherOption2 = Radiobutton(window, text= 'Decrypt',justify='left',font= 'none 12 bold', value = 2, variable=opt2)
+cypherOption2 = Radiobutton(window, text= 'Decrypt',justify='left',font= 'none 12 bold', value = 'd', variable=opt2)
 cypherOption2.grid(row=14,column=5, sticky=NW)
-
 
 
 ## output test button ###############
@@ -308,6 +367,10 @@ cypherOption2.grid(row=14,column=5, sticky=NW)
 
 
 ###### Execute #######
-window.mainloop()
 
+
+
+if __name__ == "__main__":
+    init_Pipe()
+    window.mainloop()
 
