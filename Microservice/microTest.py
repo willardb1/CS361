@@ -114,16 +114,14 @@ def execute(count):
                         file.write("0\n")
                         file.write('waiting') 
                         file.close()
-
-
                 else:
-                    print("fail attempt 2")
                     pass
             
         except:
+            print("fail attempt 2")
             pass
 
-    time.sleep(0.5) #wait 0.5sec for txt file to be updated
+        time.sleep(0.5) #wait 0.5sec for txt file to be updated
 
 #######################################################################
 #
