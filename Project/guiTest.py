@@ -58,7 +58,8 @@ def pullText():
     else: #chose text file
         if fileText != NULL:
             try:
-                inputData['text']= fileText
+                inputData['text']= fileText.strip()
+                inputData['text'] = inputData['text'] + '\n'
             except:
                 valid = False
                 message.append('could not open')
@@ -179,7 +180,7 @@ def pushToMS():
     wait = 0
     outputData['password'] = inputData['password']
     attempt = 1
-
+    print(inputData)
     while attempt == 1:
         try:
             with open("service-comm.txt","w") as file: #write run to service-comm.txt
