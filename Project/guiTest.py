@@ -1,5 +1,6 @@
 from asyncio.windows_events import NULL
 from cgitb import text
+from email import message
 from fileinput import filename
 from http.client import FAILED_DEPENDENCY
 from logging import NullHandler
@@ -13,10 +14,13 @@ from tkinter.tix import COLUMN
 from turtle import left, title, width
 import os
 import time
-import encryption as enDe
+#import encryption as enDe
+global inputData
+global outputData
+global filetypesTup
+global fileText
 
-
-fileText = NULL
+fileText = { 'text': NULL}
 
 inputData ={
     'text': NULL,
@@ -30,6 +34,12 @@ outputData = {
 }
 
 
+filetypesTup = (
+    ('text files', '*.txt'),
+    ('All files', '*.*')
+)
+
+
 #################### window ##########################
 window = Tk()
 window.title('Encrypt/Decrypt')
@@ -40,46 +50,19 @@ window.geometry("1200x900")
 
 
 ################ functions/button calls #######################
-
 def pullText():
-    global fileText
     valid = True
     message = []
-
-    if opt1.get() == 1: #chose textbox
-        try:
-            inputData['text'] = inputText.get(1.0,END)
-        except:
-            valid = False
-            message.append('no text')
-
-    else: #chose text file
-        if fileText != NULL:
-            try:
-                inputData['text']= fileText.strip() #cleans text
-                inputData['text'] = inputData['text'] + '\n'
-            except:
-                valid = False
-                message.append('could not open')
-        else:
-            message.append('no text file selected')
-
-    try: #check for password
-        inputData['password'] = passwordInput.get(1.0,END)
-    except:
-        valid = False
-        message.append('no password')
-
-    if valid: #have a password and input
-        print('sending to micro')
+    valid = checkPassword()
+    if valid:
+        valid, message = textCheck()
     else:
-        print('did not send text')
-
+        message.append('invalid password')
     return valid, message
 
 
-def retrieveText():
-    outputText.config(state='normal') #wide output box
+def retrieveText(): #populate output box with results
+    outputText.config(state='normal') #wipe output box
     outputText.delete(1.0, 'end')
     outputText.config(state='disabled')
 
@@ -88,142 +71,194 @@ def retrieveText():
     outputText.config(state='disabled')
 
 
+def getTextBox(message):
+    try:
+        inputData['text'] = inputText.get(1.0,END)
+        valid = True
+    except:
+        valid = False
+        message.append('no text')
+    return valid, message
+
+
+
+def useTextFile(message):
+    if fileText['text'] != NULL:
+        try:
+            inputData['text']= fileText['text'].strip() #cleans text
+            inputData['text'] = inputData['text'] + '\n'
+            valid = True
+        except:
+            valid = False
+            message.append('could not open')
+    else:
+        message.append('no text file selected')
+        valid = False
+    return valid, message
+
+
+
+def checkPassword():
+    try: #check for password
+        inputData['password'] = passwordInput.get(1.0,END)
+        if inputData['password'] == '\n':
+            valid = False
+        else:
+            valid = True
+    except:
+        valid = False
+    return valid
+
+
+
+def textCheck():
+    if opt1.get() == 1: #chose textbox
+        valid , message = getTextBox(message)
+    else: #chose text file
+        valid , message = useTextFile(message)
+    if valid: #have a password and input
+        print('sending to micro')
+    else:
+        print('did not send text')
+    return valid, message
+
+
+def updateFileBar(box,newText):
+        box.config(state='normal')
+        box.config(text=newText)
+        box.config(state='disabled')
+
+
+def checkFile(file): #validates structure of input text file
+    lines = file.readlines()
+    file.close()
+    if len(lines) > 1:
+        return False, NULL
+    else:
+        return True, lines[0]
+
+
+def inputFileFailed(messageTxt): #notify user that input file failed
+    updateFileBar(inputFileText, 'select a file')
+    messagebox.showerror(title='Failed to Open Text', message = messageTxt)
+
+
+def selectFile():
+    try:
+        file = askopenfile(filetypes=filetypesTup)
+        filename = os.path.basename(file.name)
+        valid, fileText['text'] = checkFile(file)
+        if(valid):
+            updateFileBar(inputFileText, filename)
+        else:
+            inputFileFailed('Invalid file structure')
+    except:
+        fileText['text'] = NULL 
+        inputFileFailed('Failed to load text file')
+
+
+
 def downloadText():
-    global outputData
-    
-    filetypesTup = (
-        ('text files', '*.txt'),
-        ('All files', '*.*')
-    )
     try:
         file = asksaveasfile(filetypes= filetypesTup)#get file from user
         filename = os.path.basename(file.name)
         file.write(outputData['text'])
         file.write('\nPassword: ' + outputData['password'])
         file.close()
-        
-        outputFileText.config(state='normal')#update output file bar
-        outputFileText.config(text=filename)
-        outputFileText.config(state='disabled')
-
-
+        updateFileBar(outputFileText, filename)
     except:
-        outputFileText.config(state='normal')#fail to select valid file
-        outputFileText.config(text='output file')
-        outputFileText.config(state='disabled')
+        updateFileBar(outputFileText, 'output file')
         messagebox.showerror(title='Failed to Download', message = 'Failed to download text file')
 
 
-def selectFile():
-    global fileText
 
-    filetypesTup = (
-        ('text files', '*.txt'),
-        ('All files', '*.*')
-    )
 
-    try:
-        file = askopenfile(filetypes=filetypesTup)
-        filename = os.path.basename(file.name)
-        fileText= file.read()
+#### communication ########
+def textWaiting():#reset txt 
+    with open("service-comm.txt","w") as file: 
+        file.write("0\n")
+        file.write("Waiting")
         file.close()
 
-        inputFileText.config(state='normal')
-        inputFileText.config(text=filename)
-        inputFileText.config(state='disabled')
+
+def init_Pipe(): #initializes text file for communication
+    try:
+        textWaiting()
     except:
-        fileText = NULL 
-        inputFileText.config(state='normal')
-        inputFileText.config(text='select a file')
-        inputFileText.config(state='disabled')
-        messagebox.showerror(title='Failed to Open Text', message = 'Failed to load text file')
+        print("could not open")
 
 
+def timeout(wait,attempt):
+    wait = wait + 1
+    if(wait == 50):
+        attempt = attempt + 1
+        outputData['text'] = 'Communication with Microservice failed'
+    return wait, attempt
+
+
+
+
+
+############## execution ##############
 def run():
     valid, messageTxt = pullText()
-    a = ''
+    msg = ''
     for x in messageTxt:
-        a = a + x +'\n'
-
-    messageTxt = a
-
+        msg = msg + x +'\n'
     if valid:
         pushToMS()
         retrieveText()
     else:
-        print(messageTxt)
-        messagebox.showerror(title='Failed Inputs', message = messageTxt)
+        print(msg)
+        messagebox.showerror(title='Failed Inputs', message = msg)
         
 
-def init_Pipe():
+def writeData():
+    with open("service-comm.txt","w") as file: #write data to service-comm.txt
+        file.write("1\n")
+        file.write(inputData['text'])
+        file.write(inputData['password'])
+        file.write(inputData['cypher'])
+        file.close()
+    return 2
+
+
+def retrieveData():
+    with open("service-comm.txt") as file: #check service-comm.txt for return
+        lines = file.readlines()
+        file.close()
+        if int(lines[0]) == 0: #theres data to pull
+            outputData['text'] = lines[1]
+            textWaiting() #clears contents of service-comm.txt (prevent slow down)
+            print(outputData)
+            return 3
+        else:
+            return 2
+
+
+def CommPass(attempt): #communicate with service
     try:
-        with open("service-comm.txt","w") as file: #write start to prng-service.txt
-            file.write("0\n")
-            file.write("Waiting")
-            file.close()
+        if attempt == 1:
+            attempt = writeData()
+        else:
+            attempt = retrieveData()
     except:
-        print("could not open")
+        pass
+    return attempt
 
 
 def pushToMS():
     inputData['cypher'] = opt2.get()
     wait = 0
     outputData['password'] = inputData['password']
-
     attempt = 1
     while attempt == 1:
-        try:
-            with open("service-comm.txt","w") as file: #write data to service-comm.txt
-                file.write("1\n")
-                file.write(inputData['text'])
-                file.write(inputData['password'])
-                file.write(inputData['cypher'])
-                file.close()
-                attempt = 2
-        except:
-            print("fail attempt")
-            pass
-
+        attempt = CommPass(attempt)
     time.sleep(0.5) #wait for txt file to be updated
-
     while attempt == 2:
-        try:
-            with open("service-comm.txt") as file: #check service-comm.txt for return
-                lines = file.readlines()
-                
-                file.close()
-                if int(lines[0]) == 0:
-                    outputData['text'] = lines[1]
-                    attempt = 3
+        attempt = CommPass(attempt)
+        wait, attempt = timeout(wait,attempt)#cancels loop if service is down
 
-                    with open("service-comm.txt",'w') as file: #clears contents of service-comm.txt (prevent slow down)
-                        file.write("0\n")
-                        file.write('waiting') 
-                        file.close()
-
-                    print(outputData)
-                else:
-                    pass     
-        except:
-            pass
-
-        time.sleep(0.25) #wait for txt file to be updated
-
-        wait = wait + 1#cancels loop if service is down
-        if(wait == 50):
-            attempt = 3
-            outputData['text'] = 'Communication with Microservice failed'
-
-
-def testFunc():
-    outputData['password'] = inputData['password']
-
-    if inputData['cypher'] == 1:
-        outputData['text'] = enDe.encrypt(inputData['text'], inputData['password'])
-    else:
-        outputData['text'] = enDe.decrypt(inputData['text'], inputData['password'])
-
-    
 
 
 
@@ -331,17 +366,7 @@ cypherOption2 = Radiobutton(window, text= 'Decrypt',justify='left',font= 'none 1
 cypherOption2.grid(row=14,column=5, sticky=NW)
 
 
-## output test button ###############
-#remove later 
-
-# outputTest = Button(window,text = 'OutputTest', justify='left', font= 'none 12 bold', bg ='white', bd=5, padx=10, command=retrieveText)
-# outputTest.grid(row=22,column=5, sticky=NW)
-
-
-###### Execute #######
-
-
-
+###### Main Loop #######
 if __name__ == "__main__":
     init_Pipe()
     window.mainloop()

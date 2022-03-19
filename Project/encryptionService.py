@@ -5,7 +5,8 @@ from operator import length_hint
 
 def encrypt(input,key):
     length = len(input)
-    keyLength = len(key) -1
+    keyLength = len(key) - 1
+
     output = ''
     for x in range(0,length):
 
@@ -17,6 +18,7 @@ def encrypt(input,key):
             k = x % keyLength
         else:
             k = x
+        
         kval = ord(key[k])
 
         oval = ival - kval + 65
@@ -31,15 +33,11 @@ def decrypt(input, key):
     length = len(input)
     keyLength = len(key) - 1
 
-    print('length: ', length)
-    print('keyLength: ', keyLength)
-
     output = ''
 
     for x in range(0,length):
 
         ival = ord(input[x])
-
         if x > keyLength:
             k = x % keyLength
         else:
@@ -67,6 +65,7 @@ def main():
             mode = f.readline().strip() #Collect mode
             f.truncate(0) #Delete text in file
             f.seek(0) #Move to beginning of file
+
             if mode.startswith('e'): #Encryption
                 newMessage = encrypt(message, key)
                 f.write('0\n')
