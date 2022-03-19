@@ -1,8 +1,6 @@
 from asyncio.windows_events import NULL
 from cgitb import text
-from email import message
 from fileinput import filename
-from http.client import FAILED_DEPENDENCY
 from logging import NullHandler
 from msilib.schema import File, Font
 from telnetlib import ENCRYPT
@@ -14,6 +12,7 @@ from tkinter.tix import COLUMN
 from turtle import left, title, width
 import os
 import time
+
 #import encryption as enDe
 global inputData
 global outputData
@@ -55,7 +54,7 @@ def pullText():
     message = []
     valid = checkPassword()
     if valid:
-        valid, message = textCheck()
+        valid, message = textCheck(message)
     else:
         message.append('invalid password')
     return valid, message
@@ -111,15 +110,11 @@ def checkPassword():
 
 
 
-def textCheck():
+def textCheck(message):
     if opt1.get() == 1: #chose textbox
         valid , message = getTextBox(message)
     else: #chose text file
         valid , message = useTextFile(message)
-    if valid: #have a password and input
-        print('sending to micro')
-    else:
-        print('did not send text')
     return valid, message
 
 
@@ -230,7 +225,6 @@ def retrieveData():
         if int(lines[0]) == 0: #theres data to pull
             outputData['text'] = lines[1]
             textWaiting() #clears contents of service-comm.txt (prevent slow down)
-            print(outputData)
             return 3
         else:
             return 2
