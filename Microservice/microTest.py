@@ -18,7 +18,6 @@ def quit_Services():
                 file.write("1\n")
                 file.write("quit")
                 file.close()
-                #print("writing to count")
                 exit_p = 2
         except:
             print("could not open")
@@ -35,7 +34,6 @@ def init_Pipe():
             file.write("0\n")
             file.write("Waiting")
             file.close()
-            #print("writing to wordCount")
 
     except:
         print("could not open")
@@ -87,7 +85,7 @@ def execute(count):
 
     while attempt == 1:
         try:
-            with open("wordCount.txt","w") as file: #write run to prng-service.txt
+            with open("wordCount.txt","w") as file: #write run to wordCount.txt
                 file.write("1\n")
                 file.write(count)
                 file.close()
@@ -97,7 +95,7 @@ def execute(count):
             print("fail attempt")
             pass
 
-    time.sleep(0.5) #wait 0.5sec for txt file to be updated
+    time.sleep(0.5) #wait for txt file to be updated
 
     while attempt == 2:
         try:
@@ -121,7 +119,7 @@ def execute(count):
             print("fail attempt 2")
             pass
 
-        time.sleep(0.5) #wait 0.5sec for txt file to be updated
+        time.sleep(0.5) #wait for txt file to be updated
 
 #######################################################################
 #

@@ -43,14 +43,12 @@ window.geometry("1200x900")
 
 def pullText():
     global fileText
-
     valid = True
     message = []
+
     if opt1.get() == 1: #chose textbox
-        print(opt1.get())
         try:
             inputData['text'] = inputText.get(1.0,END)
-
         except:
             valid = False
             message.append('no text')
@@ -58,7 +56,7 @@ def pullText():
     else: #chose text file
         if fileText != NULL:
             try:
-                inputData['text']= fileText.strip()
+                inputData['text']= fileText.strip() #cleans text
                 inputData['text'] = inputData['text'] + '\n'
             except:
                 valid = False
@@ -81,41 +79,36 @@ def pullText():
 
 
 def retrieveText():
-    outputText.config(state='normal')
+    outputText.config(state='normal') #wide output box
     outputText.delete(1.0, 'end')
     outputText.config(state='disabled')
-    #global outputData
 
-    ### get data from microservice
-    outputText.config(state='normal')
+    outputText.config(state='normal')#update output box
     outputText.insert('end',outputData['text'])
     outputText.config(state='disabled')
 
-    print('outputing text')
-
 
 def downloadText():
-
+    global outputData
+    
     filetypesTup = (
         ('text files', '*.txt'),
         ('All files', '*.*')
     )
-
     try:
-        file = asksaveasfile(filetypes= filetypesTup)
+        file = asksaveasfile(filetypes= filetypesTup)#get file from user
         filename = os.path.basename(file.name)
         file.write(outputData['text'])
         file.write('\nPassword: ' + outputData['password'])
         file.close()
         
-        outputFileText.config(state='normal')
+        outputFileText.config(state='normal')#update output file bar
         outputFileText.config(text=filename)
         outputFileText.config(state='disabled')
 
 
     except:
-
-        outputFileText.config(state='normal')
+        outputFileText.config(state='normal')#fail to select valid file
         outputFileText.config(text='output file')
         outputFileText.config(state='disabled')
         messagebox.showerror(title='Failed to Download', message = 'Failed to download text file')
@@ -157,7 +150,6 @@ def run():
     if valid:
         pushToMS()
         retrieveText()
-
     else:
         print(messageTxt)
         messagebox.showerror(title='Failed Inputs', message = messageTxt)
@@ -169,8 +161,6 @@ def init_Pipe():
             file.write("0\n")
             file.write("Waiting")
             file.close()
-            #print("writing to wordCount")
-
     except:
         print("could not open")
 
@@ -179,23 +169,22 @@ def pushToMS():
     inputData['cypher'] = opt2.get()
     wait = 0
     outputData['password'] = inputData['password']
+
     attempt = 1
-    print(inputData)
     while attempt == 1:
         try:
-            with open("service-comm.txt","w") as file: #write run to service-comm.txt
+            with open("service-comm.txt","w") as file: #write data to service-comm.txt
                 file.write("1\n")
                 file.write(inputData['text'])
                 file.write(inputData['password'])
                 file.write(inputData['cypher'])
                 file.close()
                 attempt = 2
-                
         except:
             print("fail attempt")
             pass
 
-    time.sleep(0.5) #wait 0.5sec for txt file to be updated
+    time.sleep(0.5) #wait for txt file to be updated
 
     while attempt == 2:
         try:
@@ -214,14 +203,13 @@ def pushToMS():
 
                     print(outputData)
                 else:
-                    #print("fail attempt 2")
-                    pass
-            
+                    pass     
         except:
             pass
 
-        time.sleep(0.25) #wait 0.5sec for txt file to be updated
-        wait = wait + 1
+        time.sleep(0.25) #wait for txt file to be updated
+
+        wait = wait + 1#cancels loop if service is down
         if(wait == 50):
             attempt = 3
             outputData['text'] = 'Communication with Microservice failed'
@@ -297,29 +285,22 @@ Frame(window, height= 10).grid(row = 23, column=1)
 
 outputFileText = Label(window, width = 40, bg = 'white', bd = 5, font = 'none 12', fg = 'black',text ='output file', state='disabled')
 outputFileText.grid(row = 24, column = 1, columnspan=2, sticky=W)
-# update output box
-# text.configure(state='normal')
-# text.insert('end', 'Some Text')
-# text.configure(state='disabled')
-
 
 ##### column 2 #############
-
-
 selectButton = Button(window,text = 'File Select', justify='left', font= 'none 12 bold', bg ='white', bd=5, padx=10, command=selectFile)
 selectButton.grid(row = 11, column = 3, sticky='E')
 
-
 selectButton = Button(window,text = 'Download', justify='left', font= 'none 12 bold', bg ='white', bd=5, padx=10, command=downloadText)
 selectButton.grid(row = 24, column = 3, sticky='E')
-#####  column 4 #############
 
+#####  column 4 #############
 Frame(window, width= 100, height= 5).grid(row = 0, column=4)
+
+
 #####  columb 5 ##############
 ## input options
 inputFormat = Label(window, text = 'Input Format', justify='left', font= 'none 18 bold underline', pady = 5)
 inputFormat.grid(row=1,column=5, sticky=W)
-
 
 inFormatDescription = Label(window, text = 'Select which input you would like to use', justify='left', font= 'none 12')
 inFormatDescription.grid(row=2,column=5, sticky=NW)
@@ -334,21 +315,11 @@ inputOption2.grid(row=4,column=5, sticky=NW)
 
 
 ## cypher option
-
 cypherLabel = Label(window, text = 'Cypher Options', justify='left', font= 'none 18 bold underline', pady = 5)
 cypherLabel.grid(row=11,column=5, sticky=W)
 
 CypherDescription = Label(window, text = 'Select whether you would like to encrypt od decrypt the provided text', justify='left', font= 'none 12')
 CypherDescription.grid(row=12,column=5, sticky=NW)
-
-#opt2 = IntVar()
-#opt2.set(1)
-
-# cypherOption1 = Radiobutton(window, text = 'Encrypt', justify='left',font= 'none 12 bold', value = 1, variable= opt2)
-# cypherOption1.grid(row=13,column=5, sticky=NW)
-
-# cypherOption2 = Radiobutton(window, text= 'Decrypt',justify='left',font= 'none 12 bold', value = 2, variable=opt2)
-# cypherOption2.grid(row=14,column=5, sticky=NW)
 
 opt2 = StringVar()
 opt2.set('e')
