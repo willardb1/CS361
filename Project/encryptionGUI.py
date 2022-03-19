@@ -347,7 +347,7 @@ inputOption2.grid(row=4,column=5, sticky=NW)
 cypherLabel = Label(window, text = 'Cypher Options', justify='left', font= 'none 18 bold underline', pady = 5)
 cypherLabel.grid(row=11,column=5, sticky=W)
 
-CypherDescription = Label(window, text = 'Select whether you would like to encrypt od decrypt the provided text', justify='left', font= 'none 12')
+CypherDescription = Label(window, text = 'Select whether you would like to encrypt or decrypt the provided text', justify='left', font= 'none 12')
 CypherDescription.grid(row=12,column=5, sticky=NW)
 
 opt2 = StringVar()
